@@ -54,6 +54,30 @@ class _CarSearchPageState extends State<CarSearchPage> {
   String? selectedCombustivel;
 
   List<dynamic> cars = [];
+  List<String> marcaSuggestions = [];
+  List<String> modeloSuggestions = [];
+
+  Future<List<String>> fetchMarcaSuggestions(String query) async {
+    final url = 'http://localhost:8080/carros/search?marca=$query';
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      List<dynamic> result = json.decode(response.body);
+      return result.map<String>((car) => car['Marca'].toString()).toList();
+    } else {
+      return [];
+    }
+  }
+
+  Future<List<String>> fetchModeloSuggestions(String query) async {
+    final url = 'http://localhost:8080/carros/search?modelo=$query';
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      List<dynamic> result = json.decode(response.body);
+      return result.map<String>((car) => car['Modelo'].toString()).toList();
+    } else {
+      return [];
+    }
+  }
 
   void fetchCars() async {
     String query = '';
@@ -104,20 +128,52 @@ class _CarSearchPageState extends State<CarSearchPage> {
             Row(
               children: [
                 Expanded(
-                  child: TextField(
-                    controller: _marcaController,
-                    decoration: const InputDecoration(
-                      labelText: 'Marca',
-                    ),
+                  child: Autocomplete<String>(
+                    optionsBuilder: (TextEditingValue textEditingValue) {
+                      if (textEditingValue.text.isEmpty) {
+                        return const Iterable<String>.empty();
+                      }
+                      return fetchMarcaSuggestions(textEditingValue.text);
+                    },
+                    onSelected: (String selection) {
+                      _marcaController.text = selection;
+                    },
+                    fieldViewBuilder:
+                        (context, controller, focusNode, onEditingComplete) {
+                      return TextField(
+                        controller: controller,
+                        focusNode: focusNode,
+                        decoration: const InputDecoration(
+                          labelText: 'Marca',
+                        ),
+                        onEditingComplete: onEditingComplete,
+                      );
+                    },
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: TextField(
-                    controller: _modeloController,
-                    decoration: const InputDecoration(
-                      labelText: 'Modelo',
-                    ),
+                  child: Autocomplete<String>(
+                    optionsBuilder: (TextEditingValue textEditingValue) {
+                      if (textEditingValue.text.isEmpty) {
+                        return const Iterable<String>.empty();
+                      }
+                      return fetchModeloSuggestions(textEditingValue.text);
+                    },
+                    onSelected: (String selection) {
+                      _modeloController.text = selection;
+                    },
+                    fieldViewBuilder:
+                        (context, controller, focusNode, onEditingComplete) {
+                      return TextField(
+                        controller: controller,
+                        focusNode: focusNode,
+                        decoration: const InputDecoration(
+                          labelText: 'Modelo',
+                        ),
+                        onEditingComplete: onEditingComplete,
+                      );
+                    },
                   ),
                 ),
               ],
