@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:diacritic/diacritic.dart';
 
 void main() {
   runApp(const MainApp());
@@ -88,7 +89,7 @@ class CarSearchPageState extends State<CarSearchPage> {
     if (response.statusCode == 200) {
       List<dynamic> result = json.decode(response.body);
       return result
-          .map<String>((car) => car['Combustivel'].toString())
+          .map<String>((car) => removeDiacritics(car['Combustivel'].toString()))
           .toSet()
           .toList();
     } else {
@@ -128,6 +129,8 @@ class CarSearchPageState extends State<CarSearchPage> {
       });
     }
   }
+
+  final List<String> combustivelOptions = ['Gasolina', 'Álcool'];
 
   @override
   Widget build(BuildContext context) {
@@ -214,7 +217,9 @@ class CarSearchPageState extends State<CarSearchPage> {
                       if (textEditingValue.text.isEmpty) {
                         return const Iterable<String>.empty();
                       }
-                      return fetchCombustivelSuggestions(textEditingValue.text);
+                      return combustivelOptions.where((option) => option
+                          .toLowerCase()
+                          .contains(textEditingValue.text.toLowerCase()));
                     },
                     onSelected: (String selection) {
                       _combustivelController.text = selection;
