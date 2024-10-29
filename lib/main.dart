@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:diacritic/diacritic.dart';
+import 'package:intl/intl.dart';
 
 void main() {
   runApp(const MainApp());
@@ -250,13 +251,18 @@ class CarSearchPageState extends State<CarSearchPage> {
                 itemCount: cars.length,
                 itemBuilder: (context, index) {
                   final car = cars[index];
+                  final formattedPrice = car['Preco'] != null
+                      ? NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$')
+                          .format(car['Preco'])
+                      : 'Preço indisponível';
                   return ListTile(
                     title: Text(
                       car['Modelo'],
                       style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
                     subtitle: Text(
-                        'Marca: ${car['Marca']}, Ano: ${car['Ano']}, Combustível: ${car['Combustivel']}'),
+                      'Marca: ${car['Marca']}, Ano: ${car['Ano']}, Combustível: ${car['Combustivel']}, Preço: $formattedPrice',
+                    ),
                   );
                 },
               ),
