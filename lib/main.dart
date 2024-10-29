@@ -63,6 +63,12 @@ class CarSearchPageState extends State<CarSearchPage> {
   List<String> combustivelSuggestions = [];
 
   Future<List<String>> fetchMarcaSuggestions(String query) async {
+    // Tratamento para Volkswagen/Wolkswagen
+    if (query.toLowerCase().contains('wolkswagen') ||
+        query.toLowerCase().contains('volkswagen')) {
+      query = 'Volkswagen';
+    }
+
     final url = 'http://localhost:8080/carros/search?marca=$query';
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
