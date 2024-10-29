@@ -9,26 +9,28 @@ void main() {
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
 
+  static const Color primaryColor = Color(0xFF054BF4);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primaryColor: const Color(0xFF054BF4),
+        primaryColor: primaryColor,
         colorScheme: ColorScheme.fromSwatch().copyWith(
-          primary: const Color(0xFF054BF4),
+          primary: primaryColor,
           secondary: Colors.blueAccent,
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF054BF4),
+            backgroundColor: primaryColor,
             foregroundColor: Colors.white,
           ),
         ),
         inputDecorationTheme: const InputDecorationTheme(
-          labelStyle: TextStyle(color: Color(0xFF054BF4)),
+          labelStyle: TextStyle(color: primaryColor),
           focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: Color(0xFF054BF4)),
+            borderSide: BorderSide(color: primaryColor),
           ),
           enabledBorder: OutlineInputBorder(
             borderSide: BorderSide(color: Colors.blueAccent),
@@ -44,18 +46,19 @@ class CarSearchPage extends StatefulWidget {
   const CarSearchPage({super.key});
 
   @override
-  _CarSearchPageState createState() => _CarSearchPageState();
+  CarSearchPageState createState() => CarSearchPageState();
 }
 
-class _CarSearchPageState extends State<CarSearchPage> {
+class CarSearchPageState extends State<CarSearchPage> {
   final TextEditingController _marcaController = TextEditingController();
   final TextEditingController _anoController = TextEditingController();
   final TextEditingController _modeloController = TextEditingController();
-  String? selectedCombustivel;
+  final TextEditingController _combustivelController = TextEditingController();
 
   List<dynamic> cars = [];
   List<String> marcaSuggestions = [];
   List<String> modeloSuggestions = [];
+  List<String> combustivelSuggestions = [];
 
   Future<List<String>> fetchMarcaSuggestions(String query) async {
     final url = 'http://localhost:8080/carros/search?marca=$query';
@@ -79,6 +82,20 @@ class _CarSearchPageState extends State<CarSearchPage> {
     }
   }
 
+  Future<List<String>> fetchCombustivelSuggestions(String query) async {
+    final url = 'http://localhost:8080/carros/search?combustivel=$query';
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      List<dynamic> result = json.decode(response.body);
+      return result
+          .map<String>((car) => car['Combustivel'].toString())
+          .toSet()
+          .toList();
+    } else {
+      return [];
+    }
+  }
+
   void fetchCars() async {
     String query = '';
 
@@ -94,8 +111,8 @@ class _CarSearchPageState extends State<CarSearchPage> {
       query += 'ano=${_anoController.text}&';
     }
 
-    if (selectedCombustivel != null) {
-      query += 'combustivel=$selectedCombustivel&';
+    if (_combustivelController.text.isNotEmpty) {
+      query += 'combustivel=${_combustivelController.text}&';
     }
 
     final url = 'http://localhost:8080/carros/search?$query';
@@ -190,23 +207,32 @@ class _CarSearchPageState extends State<CarSearchPage> {
                     ),
                   ),
                 ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Autocomplete<String>(
+                    optionsBuilder: (TextEditingValue textEditingValue) {
+                      if (textEditingValue.text.isEmpty) {
+                        return const Iterable<String>.empty();
+                      }
+                      return fetchCombustivelSuggestions(textEditingValue.text);
+                    },
+                    onSelected: (String selection) {
+                      _combustivelController.text = selection;
+                    },
+                    fieldViewBuilder:
+                        (context, controller, focusNode, onEditingComplete) {
+                      return TextField(
+                        controller: controller,
+                        focusNode: focusNode,
+                        decoration: const InputDecoration(
+                          labelText: 'Combustível',
+                        ),
+                        onEditingComplete: onEditingComplete,
+                      );
+                    },
+                  ),
+                ),
               ],
-            ),
-            DropdownButton<String>(
-              value: selectedCombustivel,
-              hint: const Text('Selecione o Combustível'),
-              onChanged: (String? newValue) {
-                setState(() {
-                  selectedCombustivel = newValue;
-                });
-              },
-              items: <String>['Gasolina', 'Diesel', 'Álcool', 'Flex']
-                  .map<DropdownMenuItem<String>>((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
             ),
             const SizedBox(height: 20),
             ElevatedButton(
