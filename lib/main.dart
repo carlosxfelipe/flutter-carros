@@ -251,7 +251,10 @@ class CarSearchPageState extends State<CarSearchPage> {
                 itemBuilder: (context, index) {
                   final car = cars[index];
                   return ListTile(
-                    title: Text(car['Modelo']),
+                    title: Text(
+                      car['Modelo'],
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
                     subtitle: Text(
                         'Marca: ${car['Marca']}, Ano: ${car['Ano']}, Combustível: ${car['Combustivel']}'),
                   );
