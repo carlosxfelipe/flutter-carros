@@ -58,9 +58,8 @@ class CarSearchPageState extends State<CarSearchPage> {
   final TextEditingController _combustivelController = TextEditingController();
 
   List<dynamic> cars = [];
-  List<String> marcaSuggestions = [];
-  List<String> modeloSuggestions = [];
-  List<String> combustivelSuggestions = [];
+  String selectedOrder = 'Maior Preço'; // Ordem padrão
+  List<String> orderOptions = ['Maior Preço', 'Menor Preço'];
 
   Future<List<String>> fetchMarcaSuggestions(String query) async {
     // Tratamento para Volkswagen/Wolkswagen
@@ -131,8 +130,19 @@ class CarSearchPageState extends State<CarSearchPage> {
     final response = await http.get(Uri.parse(url));
 
     if (response.statusCode == 200) {
+      List<dynamic> fetchedCars = json.decode(response.body);
+
+      // Ordenar os resultados com base na ordem selecionada
+      if (selectedOrder == 'Maior Preço') {
+        fetchedCars.sort((a, b) =>
+            (b['Preco'] ?? 0).compareTo(a['Preco'] ?? 0)); // Maior primeiro
+      } else {
+        fetchedCars.sort((a, b) =>
+            (a['Preco'] ?? 0).compareTo(b['Preco'] ?? 0)); // Menor primeiro
+      }
+
       setState(() {
-        cars = json.decode(response.body);
+        cars = fetchedCars;
       });
     } else {
       setState(() {
@@ -250,10 +260,35 @@ class CarSearchPageState extends State<CarSearchPage> {
                 ),
               ],
             ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: fetchCars,
-              child: const Text('Pesquisar'),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: selectedOrder,
+                    items: orderOptions
+                        .map((option) => DropdownMenuItem(
+                              value: option,
+                              child: Text(option),
+                            ))
+                        .toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        selectedOrder = value!;
+                      });
+                    },
+                    decoration: const InputDecoration(
+                      labelText: 'Ordenar por',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                ElevatedButton(
+                  onPressed: fetchCars,
+                  child: const Text('Pesquisar'),
+                ),
+              ],
             ),
             const SizedBox(height: 20),
             Expanded(
