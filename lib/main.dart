@@ -73,7 +73,11 @@ class CarSearchPageState extends State<CarSearchPage> {
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
       List<dynamic> result = json.decode(response.body);
-      return result.map<String>((car) => car['Marca'].toString()).toList();
+      // Usa um Set para remover duplicatas
+      return result
+          .map<String>((car) => car['Marca'].toString())
+          .toSet()
+          .toList();
     } else {
       return [];
     }
